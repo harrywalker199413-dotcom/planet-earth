@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Time</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #157EF7;
+    --surface: rgba(255,255,255,0.08);
+    --border: rgba(255, 255, 255, 0.836);
+    --accent: #39ff6e;
+    --text: #ffffff;
+    --muted: rgba(255, 255, 255, 0.774);
+    --label: rgba(255, 255, 255, 0.932);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  section {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── 1. Heading ── */
+  .heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 50px;
+    align-self: center;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 2.8rem;
+  }
+  .heading span {
+    color: var(--accent);
+  }
+
+  /* ── rows ── */
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding: 1rem 0;
+    gap: 1rem;
+  }
+  .row:last-of-type { border-bottom: 1px solid var(--border); }
+
+  .row-label {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--label);
+    flex-shrink: 0;
+  }
+
+  /* AM/PM toggle */
+  .ampm-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .ampm-toggle button {
+    background: none;
+    border: none;
+    padding: 5px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size:12px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .ampm-toggle button.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 500;
+  }
+
+  /* ── 4. Time input ── */
+  .time-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .time-inputs input {
+    width: 52px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 300;
+    text-align: center;
+    padding: 2px 0;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .time-inputs input:focus { border-color: var(--accent); }
+  .time-inputs input::placeholder { color: var(--muted); }
+  .time-sep {
+    font-size: 1.4rem;
+    color: var(--muted);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .ampm-display {
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    min-width: 26px;
+  }
+
+  /* ── 5. Location input ── */
+  .location-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 4px 0;
+    outline: none;
+    width: 220px;
+    transition: border-color .2s;
+    text-align: right;
+  }
+  .location-input:focus { border-color: var(--accent); }
+  .location-input::placeholder { color: var(--muted); }
+
+  /* ── 6. Button ── */
+  .btn-start {
+    margin-top: 2rem;
+    width: 100%;
+    padding: 1rem;
+    background: var(--accent);
+    color: #0e4a8f;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-start:hover { opacity: 0.88; }
+  .btn-start:active { transform: scale(0.98); }
+
+  /* ── 7. Countdown ── */
+  .countdown-block {
+    margin-top: 2rem;
+    padding: 1.4rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    animation: fadeUp .4s ease both;
+  }
+  .countdown-block.visible { display: flex; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cd-meta {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--label);
+  }
+  .cd-set {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .cd-set strong { color: var(--text); }
+  .cd-timer {
+    font-family: 'Inter', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    line-height: 1;
+    margin-top: 0.2rem;
+  }
+  .cd-loc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .cd-loc span { color: var(--text); }
+</style>
+</head>
+<body>
+<section>
+  <div class="card">
+
+    <!-- 1. Heading -->
+    <h1 class="heading">Time Count</h1>
+
+    <!-- 2. Put in time + AM/PM selector -->
+    <div class="row">
+      <span class="row-label">Put in time</span>
+      <div class="ampm-toggle">
+        <button id="amBtn" class="active" onclick="setAMPM('AM')">AM</button>
+        <button id="pmBtn" onclick="setAMPM('PM')">PM</button>
+      </div>
+    </div>
+
+    <!-- 3. Location label -->
+    <div class="row">
+      <span class="row-label">Location</span>
+    </div>
+
+    <!-- 4. Time input fields + AM/PM display -->
+    <div class="row">
+      <span class="row-label">Time</span>
+      <div class="time-row">
+        <div class="time-inputs">
+          <input id="hourInput" type="number" min="1" max="12" placeholder="12" maxlength="2"/>
+          <span class="time-sep">:</span>
+          <input id="minInput" type="number" min="0" max="59" placeholder="00" maxlength="2"/>
+        </div>
+        <div class="ampm-display" id="ampmDisplay">AM</div>
+      </div>
+    </div>
+
+    <!-- 5. Location input -->
+    <div class="row">
+      <span class="row-label">City / TZ</span>
+      <input class="location-input" id="locationInput" type="text" placeholder="e.g. New York, London…"/>
+    </div>
+
+    <!-- 6. Start button -->
+    <button class="btn-start" onclick="startCountdown()">Start</button>
+
+    <!-- 7. Countdown display -->
+    <div class="countdown-block" id="countdownBlock">
+      <div class="cd-meta">Counting down to</div>
+      <div class="cd-set" id="cdSet"></div>
+      <div class="cd-timer" id="cdTimer">--:--:--</div>
+      <div class="cd-loc" id="cdLoc"></div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  let selectedAMPM = 'AM';
+  let countdownTarget = null;
+  let timerInterval = null;
+
+  function setAMPM(val) {
+    selectedAMPM = val;
+    document.getElementById('amBtn').classList.toggle('active', val === 'AM');
+    document.getElementById('pmBtn').classList.toggle('active', val === 'PM');
+    document.getElementById('ampmDisplay').textContent = val;
+  }
+
+  function startCountdown() {
+    const h = parseInt(document.getElementById('hourInput').value) || null;
+    const m = parseInt(document.getElementById('minInput').value);
+    const loc = document.getElementById('locationInput').value.trim();
+
+    if (!h || h < 1 || h > 12) { shake('hourInput'); return; }
+    if (isNaN(m) || m < 0 || m > 59) { shake('minInput'); return; }
+
+    // Build target Date
+    const now = new Date();
+    let hours24 = h % 12;
+    if (selectedAMPM === 'PM') hours24 += 12;
+
+    const target = new Date(now);
+    target.setHours(hours24, m, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1); // next day if past
+
+    countdownTarget = target;
+
+    const hStr = String(h).padStart(2,'0');
+    const mStr = String(m).padStart(2,'0');
+    document.getElementById('cdSet').innerHTML =
+      `<strong>${hStr}:${mStr} ${selectedAMPM}</strong>`;
+    document.getElementById('cdLoc').innerHTML = loc
+      ? `Location: <span>${loc}</span>`
+      : '';
+
+    document.getElementById('countdownBlock').classList.add('visible');
+
+    if (timerInterval) clearInterval(timerInterval);
+    tick();
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  function tick() {
+    const now = new Date();
+    let diff = Math.floor((countdownTarget - now) / 1000);
+    if (diff < 0) { diff = 0; clearInterval(timerInterval); }
+
+    const hh = Math.floor(diff / 3600);
+    const mm = Math.floor((diff % 3600) / 60);
+    const ss = diff % 60;
+
+    document.getElementById('cdTimer').textContent =
+      `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+  }
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  function shake(id) {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#ff4d4d';
+    el.animate([
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(4px)' },
+      { transform: 'translateX(-3px)' },
+      { transform: 'translateX(3px)' },
+      { transform: 'translateX(0)' }
+    ], { duration: 300, easing: 'ease-out' });
+    setTimeout(() => el.style.borderColor = '', 800);
+  }
+
+  // clamp inputs on blur
+  document.getElementById('hourInput').addEventListener('blur', function() {
+    let v = parseInt(this.value);
+    if (v < 1) this.value = 1;
+    if (v > 12) this.value = 12;
+  });
+  document.getElementById('minInput').addEventListener('blur', function() {
+    let v = parseInt(this.value);
+    if (v < 0) this.value = 0;
+    if (v > 59) this.value = 59;
+    if (!isNaN(v)) this.value = String(v).padStart(2,'0');
+  });
+</script>
+</body>
+</html>

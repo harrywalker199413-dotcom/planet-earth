@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PlanetEarth – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:       #1165C6;
+  --bg2:      #0f53a1;
+  --card:     #0d498d;
+  --card2:    #0e4b91;
+  --green:    #3dff6e;
+  --green2:   #28c94e;
+  --blue:     #0d4c94;
+  --white:    #ffffff;
+  --muted:    rgba(255,255,255,0.45);
+  --border:   rgba(61,255,110,0.12);
+  --shadow:   0 8px 32px rgba(0,0,0,0.45);
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── grid bg ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(61,255,110,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(61,255,110,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 20% 30%,rgba(26,58,170,0.35) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+
+/* ── layout ── */
+.shell{position:relative;z-index:1;display:flex;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:260px;min-width:260px;
+  background:#0e53a1;
+  backdrop-filter:blur(20px);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:0 0 24px;
+  position:sticky;top:0;height:100vh;overflow:hidden;
+}
+
+/* brand header in sidebar */
+.side-brand{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.brand-img{width:36px;height:36px;object-fit:contain;border-radius:8px;}
+.brand-name{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  color:var(--green);letter-spacing:-.3px;
+}
+
+/* ── FIXED TOP-LEFT GLOBE CORNER ── */
+.corner-globe{
+  position:fixed;
+  top:16px;left:16px;
+  z-index:100;
+  width:110px;height:110px;
+  border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#0a1a50,#030a1e);
+  box-shadow:
+    0 0 0 2px rgba(61,255,110,0.2),
+    0 0 30px rgba(61,255,110,0.12),
+    0 8px 32px rgba(0,0,0,0.6);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.corner-globe::after{
+  content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  width:70px;height:10px;
+  background:radial-gradient(ellipse,rgba(61,255,110,0.5) 0%,transparent 70%);
+  border-radius:50%;filter:blur(5px);pointer-events:none;
+}
+#miniCanvas{display:block;border-radius:50%;}
+
+/* nav */
+.side-nav{padding:20px 16px 0;flex:1;}
+.nav-label{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  color:rgba(61,255,110,0.5);text-transform:uppercase;
+  padding:0 8px;margin-bottom:10px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:10px;
+  font-size:14px;font-weight:500;color:var(--muted);
+  cursor:pointer;margin-bottom:4px;
+  transition:background .2s,color .2s;
+  text-decoration:none;
+}
+.nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.nav-item:hover{background:rgba(61,255,110,0.07);color:var(--white);}
+.nav-item.active{background:rgba(61,255,110,0.12);color:var(--green);border:1px solid rgba(61,255,110,0.2);}
+
+/* user card at bottom */
+.side-user{
+  margin:0 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  display:flex;align-items:center;gap:12px;
+}
+.avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green2),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;
+  flex-shrink:0;
+}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:11px;color:var(--green);margin-top:1px;}
+.signout-btn{
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  transition:color .2s;padding:4px;
+}
+.signout-btn:hover{color:#ff5f5f;}
+.signout-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── MAIN ── */
+.main{flex:1;padding:32px;overflow-y:auto;display:flex;flex-direction:column;gap:28px;}
+
+/* top bar */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.topbar-left h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1.1;}
+.topbar-left h1 span{color:var(--green);}
+.topbar-left p{margin-top:4px;font-size:13px;color:var(--muted);}
+.topbar-right{display:flex;align-items:flex-start;gap:12px;padding-top:4px;}
+.notif-btn{
+  width:42px;height:42px;border-radius:50%;border:1px solid var(--border);
+  background:var(--card);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:border-color .2s;
+}
+.notif-btn:hover{border-color:var(--green);}
+.notif-btn svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.notif-dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--green);border:2px solid var(--bg);}
+.upgrade-btn{
+  background:linear-gradient(135deg,var(--green2),#18a83a);
+  border:none;border-radius:22px;padding:10px 22px;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:#fff;cursor:pointer;letter-spacing:.3px;
+  box-shadow:0 4px 18px rgba(40,201,78,0.3);
+  transition:box-shadow .2s,transform .15s;
+}
+.upgrade-btn:hover{box-shadow:0 6px 24px rgba(40,201,78,0.45);transform:translateY(-1px);}
+
+/* stat cards row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.stat-card:hover{border-color:rgba(61,255,110,0.3);transform:translateY(-2px);}
+.stat-card::before{
+  content:'';position:absolute;top:-30px;right:-20px;
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,rgba(61,255,110,0.08) 0%,transparent 70%);
+}
+.stat-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(61,255,110,0.1);border:1px solid rgba(61,255,110,0.2);
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+}
+.stat-icon svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px;}
+.stat-change{
+  font-size:11px;font-weight:600;margin-top:8px;
+  display:flex;align-items:center;gap:4px;
+}
+.stat-change.up{color:var(--green);}
+.stat-change.down{color:#ff6b6b;}
+
+/* two col */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+
+/* section card */
+.section-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;padding:24px;
+}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+.view-all{font-size:12px;color:var(--green);cursor:pointer;font-weight:600;text-decoration:none;opacity:.8;transition:opacity .2s;}
+.view-all:hover{opacity:1;}
+
+/* purchase table */
+.purchase-table{width:100%;border-collapse:collapse;}
+.purchase-table th{
+  font-size:11px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;
+  padding:0 12px 12px;text-align:left;border-bottom:1px solid var(--border);
+}
+.purchase-table td{padding:14px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.purchase-table tr:last-child td{border-bottom:none;}
+.purchase-table tr:hover td{background:rgba(61,255,110,0.03);}
+.item-name{display:flex;align-items:center;gap:10px;}
+.item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;
+}
+.badge.paid{background:rgba(61,255,110,0.12);color:var(--green);}
+.badge.pending{background:rgba(255,196,0,0.12);color:#ffc400;}
+.badge.failed{background:rgba(255,90,90,0.12);color:#ff5a5a;}
+.amount-col{font-family:'Syne',sans-serif;font-weight:700;}
+.amount-col.pos{color:var(--green);}
+
+/* right col stacks */
+.right-col{display:flex;flex-direction:column;gap:20px;}
+
+/* profile card */
+.profile-card{
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:18px;padding:24px;
+  text-align:center;
+}
+.profile-avatar-big{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 14px;
+  background:linear-gradient(135deg,var(--green2) 0%,#0e55a5 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;
+  border:3px solid rgba(61,255,110,0.3);
+  box-shadow:0 0 24px rgba(61,255,110,0.2);
+}
+.profile-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.profile-handle{font-size:12px;color:var(--green);margin-top:2px;}
+.profile-bio{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6;}
+.profile-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pstat{text-align:center;}
+.pstat-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);}
+.pstat-label{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* categories */
+.cat-list{display:flex;flex-direction:column;gap:10px;}
+.cat-row{display:flex;align-items:center;gap:12px;}
+.cat-label{font-size:13px;font-weight:500;min-width:80px;}
+.cat-bar-bg{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;}
+.cat-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--green2),var(--green));}
+.cat-pct{font-size:12px;font-weight:700;color:var(--green);min-width:36px;text-align:right;}
+
+/* sign-off banner */
+.signoff-banner{
+  background:linear-gradient(135deg,#0e519e,#1165C6);
+  border:1px solid var(--border);
+  border-radius:18px;padding:24px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.signoff-banner::before{
+  content:'';position:absolute;right:-60px;top:-60px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,#0f57a8 0%,transparent 70%);
+}
+.signoff-left h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.signoff-left h3 span{color:var(--green);}
+.signoff-left p{font-size:13px;color:var(--muted);margin-top:4px;}
+.signoff-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.signoff-time{font-size:12px;color:var(--muted);}
+.signoff-btn{
+  background:transparent;border:1px solid rgba(0, 243, 32, 0.4);
+  border-radius:22px;padding:10px 20px;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:#3df505;cursor:pointer;
+  transition:background .2s,border-color .2s;
+  display:flex;align-items:center;gap:7px;
+}
+.signoff-btn:hover{background:rgba(255,90,90,0.1);border-color:#ff6b6b;}
+.signoff-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── GLOBE RING WIDGET ── */
+.globe-widget{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:rgba(5,14,42,0.7);
+  border:1px solid rgba(212,149,42,0.2);
+  border-radius:18px;
+  padding:12px 12px 10px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+#ringCanvas{display:block;}
+.ring-controls{
+  display:flex;align-items:center;gap:10px;
+}
+.ring-btn{
+  width:26px;height:26px;border-radius:50%;
+  border:1px solid rgba(212,149,42,0.35);
+  background:rgba(212,149,42,0.08);
+  color:#f0c060;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .15s;
+}
+.ring-btn:hover{background:rgba(212,149,42,0.25);transform:scale(1.1);}
+.ring-btn:active{transform:scale(0.92);}
+.ring-label{
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.4);min-width:60px;text-align:center;
+}
+
+@media(max-width:1100px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .two-col{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{padding:20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+
+  <!-- Brand logo top -->
+  <div class="side-brand">
+    <img src="3dlogo.png" alt="PlanetEarth" class="brand-img"/>
+    <span class="brand-name">PlanetEarth</span>
+  </div>
+  <div class="globe-widget">
+        <canvas id="ringCanvas" width="220" height="220"></canvas>
+        <div class="ring-controls">
+          <button class="ring-btn" id="rBtnLeft"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="ring-label" id="ringLabel">–</span>
+          <button class="ring-btn" id="rBtnRight"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+
+
+  <!-- Nav -->
+  <nav class="side-nav">
+    <div class="nav-label">Menu</div>
+
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+      Leads
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Trends
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Earth Shopping
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Timer
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Investment
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </a>
+  </nav>
+
+  <!-- User at bottom -->
+  <div class="side-user">
+    <div class="avatar">JD</div>
+    <div class="user-info">
+      <div class="user-name">John Doe</div>
+      <div class="user-role">PlanetEarth Pro</div>
+    </div>
+    <button class="signout-btn" title="Sign out">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Welcome back, <span>John</span> 👋</h1>
+      <p>Here's what's happening on your PlanetEarth account today.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+
+      <!-- Mini Globe + Ring widget -
+      <div class="globe-widget">
+        <canvas id="ringCanvas" width="220" height="220"></canvas>
+        <div class="ring-controls">
+          <button class="ring-btn" id="rBtnLeft"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="ring-label" id="ringLabel">–</span>
+          <button class="ring-btn" id="rBtnRight"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div> -->
+
+    </div>
+  </div>
+
+
+
+  <!-- Two column -->
+  <div class="two-col">
+
+    <!-- Purchases table -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-title">Recent Purchases</div>
+        <a class="view-all" href="#">View all →</a>
+      </div>
+      <table class="purchase-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#3dff6e"></div>Galaxy S25 Ultra</div></td>
+            <td style="color:var(--muted);font-size:12px">Electronics</td>
+            <td style="color:var(--muted);font-size:12px">Mar 15, 2026</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td class="amount-col pos">$1,299</td>
+          </tr>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#ffc400"></div>Designer Hoodie</div></td>
+            <td style="color:var(--muted);font-size:12px">Unisex</td>
+            <td style="color:var(--muted);font-size:12px">Mar 13, 2026</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td class="amount-col" style="color:#ffc400">$189</td>
+          </tr>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#3dff6e"></div>Annual Pro Plan</div></td>
+            <td style="color:var(--muted);font-size:12px">Subscription</td>
+            <td style="color:var(--muted);font-size:12px">Mar 10, 2026</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td class="amount-col pos">$299</td>
+          </tr>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#ff6b6b"></div>Crypto Investment</div></td>
+            <td style="color:var(--muted);font-size:12px">Investment</td>
+            <td style="color:var(--muted);font-size:12px">Mar 08, 2026</td>
+            <td><span class="badge failed">Failed</span></td>
+            <td class="amount-col" style="color:#ff6b6b">$500</td>
+          </tr>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#3dff6e"></div>Ice Cream Bundle</div></td>
+            <td style="color:var(--muted);font-size:12px">Food</td>
+            <td style="color:var(--muted);font-size:12px">Mar 06, 2026</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td class="amount-col pos">$48</td>
+          </tr>
+          <tr>
+            <td><div class="item-name"><div class="item-dot" style="background:#3dff6e"></div>Travel Package</div></td>
+            <td style="color:var(--muted);font-size:12px">Trends</td>
+            <td style="color:var(--muted);font-size:12px">Mar 03, 2026</td>
+            <td><span class="badge paid">Paid</span></td>
+            <td class="amount-col pos">$780</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right col -->
+    <div class="right-col">
+
+      <!-- Profile card -->
+      <div class="profile-card">
+        <div class="profile-avatar-big">JD</div>
+        <div class="profile-name">John Doe</div>
+        <div class="profile-handle">@johndoe · PlanetEarth Pro</div>
+        <p class="profile-bio">Global explorer & digital entrepreneur. Connected to opportunities across every continent.</p>
+        <hr class="profile-divider"/>
+        <div class="profile-stats">
+          <div class="pstat"><div class="pstat-val">38</div><div class="pstat-label">Purchases</div></div>
+          <div class="pstat"><div class="pstat-val">142</div><div class="pstat-label">Leads</div></div>
+          <div class="pstat"><div class="pstat-val">12</div><div class="pstat-label">Months</div></div>
+        </div>
+      </div>
+
+      <!-- Category breakdown removed -->
+
+    </div>
+  </div>
+
+  <!-- Sign-off banner -->
+  <div class="signoff-banner">
+    <div class="signoff-left">
+      <h3>See you next time, <span>John Doe</span> 👋</h3>
+      <p>Last active: Today at 3:42 PM · Session duration: 1h 12m</p>
+    </div>
+    <div class="signoff-right">
+      <span class="signoff-time">March 17, 2026</span>
+      <button class="signoff-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ══════════ THREE.JS GLOBE + RING WIDGET ══════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  /* ── Images for ring ── */
+  const IMAGES=[
+    {src:'images/2150804317.jpg',                           label:'Landscape'},
+    {src:'images/52fede5b44dfee94f976b8fa8b840426.jpg',     label:'Explorer'},
+    {src:'images/70872216903dc3d9f4e8eebafd41afb1.jpg',     label:'Journey'},
+    {src:'images/Image-2.png',                              label:'Horizon'},
+    {src:'images/Image-3.png',                              label:'Discovery'},
+    {src:'images/delicious-ice-cream-with-berries (1).jpg', label:'Delights'},
+    {src:'images/delicious-ice-cream-with-topping (1).jpg', label:'Treats'},
+    {src:'images/delicious-ice-cream-with-topping.jpg',     label:'Flavours'},
+    {src:'images/war-tank-dark-style.jpg',                  label:'Power'},
+  ];
+  const FC=IMAGES.length;
+
+  function makeImgTex(img){
+    const W=160,H=110;
+    const c=document.createElement('canvas'); c.width=W; c.height=H;
+    const ctx=c.getContext('2d');
+    const scale=Math.max(W/img.naturalWidth,H/img.naturalHeight);
+    const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
+    ctx.drawImage(img,(W-dw)/2,(H-dh)/2,dw,dh);
+    return new THREE.CanvasTexture(c);
+  }
+  function makeFallbackTex(label){
+    const W=160,H=110;
+    const c=document.createElement('canvas'); c.width=W; c.height=H;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#1a2a3a'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,0.35)';
+    ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(label,W/2,H/2+4);
+    return new THREE.CanvasTexture(c);
+  }
+  function preloadImages(cb){
+    const imgs=new Array(FC).fill(null); let pending=FC;
+    IMAGES.forEach((item,i)=>{
+      const img=new Image(); img.crossOrigin='anonymous';
+      img.onload =()=>{ imgs[i]=img; if(--pending===0) cb(imgs); };
+      img.onerror=()=>{ imgs[i]=null; if(--pending===0) cb(imgs); };
+      img.src=item.src;
+    });
+  }
+  function makeEarthTex(){
+    const S=512; const c=document.createElement('canvas'); c.width=c.height=S;
+    const ctx=c.getContext('2d');
+    const og=ctx.createLinearGradient(0,0,0,S);
+    og.addColorStop(0,'#082550'); og.addColorStop(.5,'#1468a8'); og.addColorStop(1,'#082550');
+    ctx.fillStyle=og; ctx.fillRect(0,0,S,S);
+    [{x:.21,y:.36,rx:.085,ry:.18},{x:.52,y:.28,rx:.055,ry:.09},
+     {x:.65,y:.26,rx:.12,ry:.11},{x:.78,y:.60,rx:.055,ry:.055}]
+    .forEach(({x,y,rx,ry})=>{
+      ctx.beginPath(); ctx.ellipse(x*S,y*S,rx*S,ry*S,0,0,Math.PI*2);
+      ctx.fillStyle='#3a7030'; ctx.fill();
+    });
+    return new THREE.CanvasTexture(c);
+  }
+
+  /* ── Scene ── */
+  const canvas=document.getElementById('ringCanvas');
+  const CW=220,CH=220;
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setSize(CW,CH); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(42,1,.1,100);
+  camera.position.set(0,0.25,3.2);
+  camera.lookAt(0,-0.05,0);
+
+  scene.add(new THREE.AmbientLight(0xffffff,.42));
+  const sun=new THREE.DirectionalLight(0xfff4e0,1.5); sun.position.set(4,3,5); scene.add(sun);
+  const rim=new THREE.DirectionalLight(0x4070ff,.26); rim.position.set(-5,-2,-3); scene.add(rim);
+
+  /* Earth */
+  const earthMat=new THREE.MeshStandardMaterial({roughness:.55});
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1,48,48),earthMat));
+  new THREE.TextureLoader().load('3dlogo.png',
+    tex=>{earthMat.map=tex;earthMat.needsUpdate=true;},
+    undefined,
+    ()=>{earthMat.map=makeEarthTex();earthMat.needsUpdate=true;}
+  );
+
+  /* Atmosphere */
+  const aS=128,aC=document.createElement('canvas'); aC.width=aC.height=aS;
+  const aCtx=aC.getContext('2d');
+  const ag=aCtx.createRadialGradient(aS/2,aS/2,aS*.43,aS/2,aS/2,aS/2);
+  ag.addColorStop(0,'rgba(100,180,255,0)'); ag.addColorStop(.73,'rgba(100,180,255,0.07)'); ag.addColorStop(1,'rgba(100,180,255,0.30)');
+  aCtx.fillStyle=ag; aCtx.fillRect(0,0,aS,aS);
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.04,48,48),
+    new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(aC),transparent:true,depthWrite:false})));
+
+  /* Ring groups */
+  const RING_R=1.45, TILT=-26*Math.PI/180;
+  const FRAME_W=0.38, FRAME_H=0.22, FRAME_D=0.014;
+  const outerGroup=new THREE.Group();
+  outerGroup.rotation.x=TILT; outerGroup.position.y=-0.18;
+  scene.add(outerGroup);
+  const innerGroup=new THREE.Group();
+  outerGroup.add(innerGroup);
+  innerGroup.add(new THREE.Mesh(
+    new THREE.TorusGeometry(RING_R,.005,16,120),
+    new THREE.MeshStandardMaterial({color:0xd4952a,roughness:.3,metalness:.8,emissive:0x7a4a08,emissiveIntensity:.3})
+  ));
+
+  /* Slide state */
+  const STEP=(Math.PI*2)/FC;
+  let activeIdx=0;
+  const ringLabel=document.getElementById('ringLabel');
+
+  function updateUI(){ ringLabel.textContent=IMAGES[activeIdx].label; }
+  function slide(dir){
+    activeIdx=((activeIdx+dir)+FC)%FC;
+    targetY-=dir*STEP;
+    updateUI();
+  }
+  document.getElementById('rBtnRight').addEventListener('click',()=>slide(+1));
+  document.getElementById('rBtnLeft') .addEventListener('click',()=>slide(-1));
+  updateUI();
+
+  /* Start render loop immediately — globe shows right away, frames pop in when loaded */
+  let targetY=0;
+  (function animate(){
+    requestAnimationFrame(animate);
+    innerGroup.rotation.y+=(targetY-innerGroup.rotation.y)*0.10;
+    renderer.render(scene,camera);
+  })();
+
+  /* Build frames after images load */
+  preloadImages(function(imgs){
+    for(let i=0;i<FC;i++){
+      const angle=(i/FC)*Math.PI*2;
+      const tex=imgs[i]?makeImgTex(imgs[i]):makeFallbackTex(IMAGES[i].label);
+      const mats=[
+        new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+        new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+        new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+        new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+        new THREE.MeshStandardMaterial({map:tex,roughness:.5}),
+        new THREE.MeshStandardMaterial({color:0x705010,roughness:.3,metalness:.7}),
+      ];
+      const mesh=new THREE.Mesh(new THREE.BoxGeometry(FRAME_W,FRAME_H,FRAME_D),mats);
+      mesh.position.set(Math.cos(angle)*RING_R,0,Math.sin(angle)*RING_R);
+      mesh.rotation.y=-angle+Math.PI/2;
+      innerGroup.add(mesh);
+    }
+  });
+})();
+</script>
+</body>
+</html>

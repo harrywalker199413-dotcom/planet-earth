@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlanetEarth – 3D Globe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #020d2e;
+      --green: #39ff6e;
+      --white: #ffffff;
+      --card: rgba(255,255,255,0.06);
+      --card-border: rgba(255,255,255,0.1);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── glow bg blobs ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 60%, rgba(57,255,110,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 60% at 20% 20%, rgba(6,18,100,0.6) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── section wrapper ── */
+    .globe-section {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      padding: 40px 24px;
+      width: 100%;
+    }
+
+    /* heading */
+    .globe-heading {
+      text-align: center;
+    }
+    .globe-heading h2 {
+      font-size: clamp(26px, 4vw, 48px);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .globe-heading h2 span { color: var(--green); }
+    .globe-heading p {
+      margin-top: 8px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ── canvas stage ── */
+    .globe-stage {
+      position: relative;
+      width: 420px;
+      height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* glow ring under globe */
+    .globe-stage::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 30px;
+      background: radial-gradient(ellipse, rgba(57,255,110,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
+    #globeCanvas {
+      display: block;
+      border-radius: 50%;
+      box-shadow:
+        0 0 60px rgba(57,255,110,0.12),
+        0 0 120px rgba(0,0,0,0.6);
+    }
+
+    /* ── controls ── */
+    .globe-controls {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .swipe-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1.5px solid var(--card-border);
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      color: var(--white);
+    }
+    .swipe-btn:hover {
+      background: rgba(57,255,110,0.15);
+      border-color: var(--green);
+      box-shadow: 0 0 18px rgba(57,255,110,0.25);
+      transform: scale(1.08);
+    }
+    .swipe-btn:active { transform: scale(0.96); }
+    .swipe-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* label counter */
+    .globe-counter {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      min-width: 60px;
+      text-align: center;
+    }
+    .globe-counter strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    /* ── image label strip ── */
+    .img-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      height: 20px;
+      transition: opacity 0.3s;
+    }
+
+    /* drag hint */
+    .drag-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+      margin-top: -16px;
+    }
+    .drag-hint svg {
+      width: 14px; height: 14px;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8;
+    }
+
+    @media (max-width: 500px) {
+      .globe-stage { width: 300px; height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="globe-section">
+
+  <!-- Heading -->
+  <div class="globe-heading">
+    <h2>Explore the <span>World</span></h2>
+    <p>Rotate the globe to discover stories from every corner of the planet</p>
+  </div>
+
+  <!-- Three.js canvas -->
+  <div class="globe-stage">
+    <canvas id="globeCanvas" width="420" height="420"></canvas>
+  </div>
+
+  <!-- Image name label -->
+  <div class="img-label" id="imgLabel">Earth Globe</div>
+
+  <!-- Controls -->
+  <div class="globe-controls">
+    <!-- Left -->
+    <button class="swipe-btn" id="btnLeft" aria-label="Rotate left">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+
+    <!-- Counter -->
+    <div class="globe-counter">
+      <strong id="counterNum">1</strong>
+      <span id="counterTotal">/ 9</span>
+    </div>
+
+    <!-- Right -->
+    <button class="swipe-btn" id="btnRight" aria-label="Rotate right">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- Drag hint -->
+  <div class="drag-hint">
+    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    Drag or use arrows to rotate
+  </div>
+
+</section>
+
+<!-- ─────────────────────────────────────────────────────────────────
+     Three.js via CDN
+───────────────────────────────────────────────────────────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   CONFIG – images that tile the sphere surface
+   Slot 0  → Earth globe base image (3dlogo.png)
+   Slots 1-8 → user images from /images/
+══════════════════════════════════════════════════════════════════ */
+const IMAGES = [
+  { src: '3dlogo.png',                                       label: 'Earth Globe'      },
+  { src: 'images/2150804317.jpg',                            label: 'Landscape'        },
+  { src: 'images/52fede5b44dfee94f976b8fa8b840426.jpg',      label: 'Explorer'         },
+  { src: 'images/70872216903dc3d9f4e8eebafd41afb1.jpg',      label: 'Journey'          },
+  { src: 'images/Image-2.png',                               label: 'Horizon'          },
+  { src: 'images/Image-3.png',                               label: 'Discovery'        },
+  { src: 'images/delicious-ice-cream-with-berries (1).jpg',  label: 'Delights'         },
+  { src: 'images/delicious-ice-cream-with-topping (1).jpg',  label: 'Treats'           },
+  { src: 'images/delicious-ice-cream-with-topping.jpg',      label: 'Flavours'         },
+  { src: 'images/war-tank-dark-style.jpg',                   label: 'Power'            },
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   Three.js scene setup
+══════════════════════════════════════════════════════════════════ */
+const canvas  = document.getElementById('globeCanvas');
+const W = canvas.width, H = canvas.height;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+camera.position.z = 2.6;
+
+/* Lighting */
+const ambient  = new THREE.AmbientLight(0xffffff, 0.55);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(3, 4, 5);
+const rimLight = new THREE.DirectionalLight(0x39ff6e, 0.25);
+rimLight.position.set(-4, -2, -3);
+scene.add(ambient, dirLight, rimLight);
+
+/* Sphere geometry */
+const geo = new THREE.SphereGeometry(1, 64, 64);
+
+/* Texture loader */
+const loader = new THREE.TextureLoader();
+
+/* ── Preload all textures ── */
+const textures = [];
+let loadedCount = 0;
+
+// Build a plain full-stretch texture (used for slot 0 – the earth logo)
+function buildPlainTexture(img) {
+  const size = 1024;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+// Build collage canvas texture – all images tiled as photo cards on a sphere
+function buildCollageTexture(allImgs) {
+  const size = 1024;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+
+  // dark ocean base
+  ctx.fillStyle = '#1a6e8a';
+  ctx.fillRect(0, 0, size, size);
+
+  // tile photo cards in a grid
+  const cols = 6, rows = 6;
+  const tw = size / cols, th = size / rows;
+
+  const pool = allImgs.filter(Boolean);
+  if (pool.length === 0) return new THREE.CanvasTexture(c);
+
+  let idx = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let col = 0; col < cols; col++) {
+      const img = pool[idx % pool.length];
+      idx++;
+      const x = col * tw, y = r * th;
+      // white card border
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillRect(x, y, tw, th);
+      // image inset
+      const pad = 5;
+      try { ctx.drawImage(img, x + pad, y + pad, tw - pad * 2, th - pad * 2); } catch(e){}
+    }
+  }
+
+  return new THREE.CanvasTexture(c);
+}
+
+// Preload images
+const rawImgs = new Array(IMAGES.length).fill(null);
+
+function preloadAll(cb) {
+  let pending = IMAGES.length;
+  IMAGES.forEach((item, i) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => { rawImgs[i] = img; if (--pending === 0) cb(); };
+    img.onerror = () => { rawImgs[i] = null; if (--pending === 0) cb(); };
+    img.src = item.src;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Globe state
+══════════════════════════════════════════════════════════════════ */
+let currentSlot = 0;                // which image is currently showing
+let targetRotY  = 0;                // target Y rotation (radians)
+let currentRotY = 0;               // current interpolated rotation
+let isSpinning  = false;           // mid-360 animation?
+let spinStart   = 0;               // time spin started
+const SPIN_DUR  = 1200;            // ms for one 360 swipe
+const SLOT_COUNT = IMAGES.length;
+
+const counterNum   = document.getElementById('counterNum');
+const counterTotal = document.getElementById('counterTotal');
+const imgLabel     = document.getElementById('imgLabel');
+
+counterTotal.textContent = `/ ${SLOT_COUNT}`;
+
+/* material placeholder */
+let mat;
+let mesh;
+
+function initGlobe() {
+  // Slot 0 default: plain earth logo texture (no collage)
+  const earthImg = rawImgs[0];
+  const texture  = earthImg ? buildPlainTexture(earthImg) : buildPlainTexture(createFallback());
+
+  mat = new THREE.MeshStandardMaterial({
+    map: texture,
+    roughness: 0.45,
+    metalness: 0.05,
+  });
+
+  mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+
+  updateUI(0);
+  animate();
+}
+
+function createFallback() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0b4d8a';
+  ctx.fillRect(0,0,512,512);
+  return c;
+}
+
+/* Switch texture to the given slot */
+function switchToSlot(slot) {
+  slot = ((slot % SLOT_COUNT) + SLOT_COUNT) % SLOT_COUNT;
+  currentSlot = slot;
+
+  let newTex;
+
+  if (slot === 0) {
+    // Back to default: plain 3D earth logo
+    const earthImg = rawImgs[0];
+    newTex = earthImg ? buildPlainTexture(earthImg) : buildPlainTexture(createFallback());
+  } else {
+    // Collage view: use all images as photo tiles
+    const pool = rawImgs.filter(Boolean);
+    newTex = buildCollageTexture(pool);
+  }
+
+  if (mat.map) mat.map.dispose();
+  mat.map = newTex;
+  mat.needsUpdate = true;
+
+  updateUI(slot);
+}
+
+function updateUI(slot) {
+  counterNum.textContent  = slot + 1;
+  imgLabel.textContent    = IMAGES[slot]?.label || '';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Rotation – each button click triggers a 360° spin to the next slot
+══════════════════════════════════════════════════════════════════ */
+const TWO_PI = Math.PI * 2;
+
+function triggerSpin(direction) {
+  // direction: +1 = right (forward), -1 = left (backward)
+  const nextSlot = ((currentSlot + direction) + SLOT_COUNT) % SLOT_COUNT;
+
+  // Start spinning; snap texture at the halfway point (180°)
+  isSpinning   = true;
+  spinStart    = performance.now();
+
+  const startY = currentRotY;
+  const halfDone = false;
+  let textureSwapped = false;
+
+  // Store in closure for animation
+  activeSpinData = {
+    startY,
+    direction,
+    nextSlot,
+    startTime: performance.now(),
+    textureSwapped: false,
+  };
+}
+
+let activeSpinData = null;
+
+/* ══════════════════════════════════════════════════════════════════
+   Drag / mouse interaction
+══════════════════════════════════════════════════════════════════ */
+let isDragging = false;
+let dragStartX = 0;
+let dragRotY   = 0;
+const DRAG_SENSITIVITY = 0.008;
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragRotY   = currentRotY;
+  activeSpinData = null; // cancel auto spin
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStartX;
+  currentRotY = dragRotY + dx * DRAG_SENSITIVITY;
+  targetRotY  = currentRotY;
+});
+
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+// Touch
+canvas.addEventListener('touchstart', e => {
+  isDragging = true;
+  dragStartX = e.touches[0].clientX;
+  dragRotY   = currentRotY;
+  activeSpinData = null;
+}, { passive: true });
+window.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  const dx = e.touches[0].clientX - dragStartX;
+  currentRotY = dragRotY + dx * DRAG_SENSITIVITY;
+  targetRotY  = currentRotY;
+}, { passive: true });
+window.addEventListener('touchend', () => { isDragging = false; });
+
+/* ══════════════════════════════════════════════════════════════════
+   Easing
+══════════════════════════════════════════════════════════════════ */
+function easeInOut(t) {
+  return t < 0.5 ? 2*t*t : -1 + (4-2*t)*t;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Render loop
+══════════════════════════════════════════════════════════════════ */
+function animate() {
+  requestAnimationFrame(animate);
+
+  const now = performance.now();
+
+  if (activeSpinData && !isDragging) {
+    const sd = activeSpinData;
+    const elapsed = now - sd.startTime;
+    const progress = Math.min(elapsed / SPIN_DUR, 1);
+    const eased = easeInOut(progress);
+
+    currentRotY = sd.startY + sd.direction * TWO_PI * eased;
+
+    // swap the texture at the 50% mark
+    if (progress >= 0.5 && !sd.textureSwapped) {
+      sd.textureSwapped = true;
+      switchToSlot(sd.nextSlot);
+    }
+
+    if (progress >= 1) {
+      currentRotY = sd.startY + sd.direction * TWO_PI;
+      activeSpinData = null;
+    }
+  }
+
+  // subtle idle tilt
+  const idleTilt = Math.sin(now * 0.0005) * 0.08;
+
+  if (mesh) {
+    mesh.rotation.y = currentRotY;
+    mesh.rotation.x = idleTilt;
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Button listeners
+══════════════════════════════════════════════════════════════════ */
+document.getElementById('btnRight').addEventListener('click', () => {
+  if (activeSpinData) return; // ignore during spin
+  triggerSpin(+1);
+});
+document.getElementById('btnLeft').addEventListener('click', () => {
+  if (activeSpinData) return;
+  triggerSpin(-1);
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   Boot
+══════════════════════════════════════════════════════════════════ */
+preloadAll(() => {
+  if (rawImgs[0]) {
+    initGlobe();
+  } else {
+    // fallback: init without earth image
+    rawImgs[0] = createFallback();
+    initGlobe();
+  }
+});
+</script>
+</body>
+</html>

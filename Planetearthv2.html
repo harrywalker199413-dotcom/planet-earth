@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PlanetEarth – One Planet. Unlimited Opportunities.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy-deep: #157ef7;
+      --navy-card: #0e4a8f;
+      --green-bright: #39ff6e;
+      --white: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.78);
+      --border-light: rgba(255, 255, 255, 0.12);
+      --section-separator: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--navy-deep);
+      color: var(--white);
+      line-height: 1.5;
+    }
+
+    /* --- NAVIGATION (modern, clean) --- */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 48px;
+      height: 70px;
+      background: #0e519e;
+      backdrop-filter: blur(0px);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      background: rgba(57, 255, 110, 0.12);
+    }
+
+    .nav-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.3px;
+      color: white;
+    }
+
+    .nav-logo-text span {
+      color: var(--green-bright);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--green-bright);
+    }
+
+    .nav-auth {
+      display: flex;
+      gap: 14px;
+    }
+
+    .nav-auth button {
+      padding: 8px 22px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .nav-auth .btn-login {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: white;
+    }
+
+    .nav-auth .btn-login:hover {
+      border-color: var(--green-bright);
+      background: rgba(57, 255, 110, 0.08);
+    }
+
+    .nav-auth .btn-signup {
+      background: var(--green-bright);
+      border: none;
+      color: #09182c;
+    }
+
+    .nav-auth .btn-signup:hover {
+      background: #2edf5c;
+      transform: scale(0.97);
+    }
+
+    /* --- MAIN LAYOUT --- */
+    .layout {
+      display: flex;
+      padding-top: 70px;
+    }
+
+    /* LEFT PANEL — NORMAL SECTIONS (no card backgrounds, flat & spacious) */
+    .left-scroll {
+      width: 70%;
+      background: #157EF7;
+    }
+
+    /* each section = clean block, no card styling */
+    .left-card {
+      position: relative;
+      height: 80vh;
+      padding: 80px 56px 80px 64px;
+      border-bottom: 1px solid var(--section-separator);
+      background: #157EF7;
+      transition: background 0.2s;
+      scroll-margin-top: 70px;
+    }
+
+    /* subtle hover effect on whole section (not card-like) */
+    .left-card:hover {
+      background: #1a85ff;
+    }
+
+    /* section number (elegant minimal badge) */
+    .card-number {
+      position: absolute;
+      top: 32px;
+      left: 48px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.1);
+      padding: 4px 12px;
+      border-radius: 40px;
+      backdrop-filter: blur(2px);
+    }
+
+    /* inner container — no card background, no border, no shadow */
+    .card-inner {
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin-top: 100px;
+    }
+
+    /* header with icon + title */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .card-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 24px;
+      background: rgba(57, 255, 110, 0.12);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .left-card:hover .card-icon {
+      transform: scale(1.02);
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: white;
+      line-height: 1.2;
+    }
+
+    /* SHORT PARAGRAPH STYLES (below heading) */
+    .section-description {
+      font-size: 17px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 450;
+      margin-top: 8px;
+      margin-bottom: 6px;
+      max-width: 90%;
+      border-left: 3px solid var(--green-bright);
+      padding-left: 18px;
+      background: transparent;
+      letter-spacing: 0.05em;
+    }
+
+    /* feature list — minimal and clean */
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin: 10px 0 6px;
+    }
+
+    .card-list li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 17px;
+      font-weight: 450;
+      color: #ffffffe0;
+      line-height: 1.45;
+      letter-spacing: 0.05em;
+    }
+
+    .card-list li::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--green-bright);
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+
+    /* BUTTON — ORIGINAL DESIGN (preserved from initial version) */
+    .card-btn {
+      padding: 14px 0;
+      width: 30%;
+      min-width: 0%;
+      background: rgba(57, 255, 110, 0.10);
+      border: 1px solid rgba(57, 255, 110, 0.35);
+      color: var(--green-bright);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.04em;
+      transition: all 0.2s ease;
+      margin-top: 12px;
+      text-align: center;
+      display: inline-block;
+      backdrop-filter: blur(2px);
+    }
+
+    .card-btn:hover {
+      background: rgba(57, 255, 110, 0.22);
+      border-color: var(--green-bright);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* RIGHT FIXED PANEL (unchanged, clean sidebar) */
+    .right-panel {
+      width: 30%;
+      position: fixed;
+      top: 70px;
+      right: 0;
+      height: calc(100vh - 70px);
+      background: #0f4d8f;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 48px 32px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(2px);
+    }
+
+    .right-panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.829);
+      margin-bottom: 32px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .card-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 16px;
+      font-weight: 600;
+      color: #d6f0ff;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .card-item:hover {
+      color: var(--green-bright);
+      padding-left: 8px;
+      border-bottom-color: rgba(57, 255, 110, 0.3);
+    }
+
+    .card-bullet {
+      width: 8px;
+      height: 8px;
+      background: var(--green-bright);
+      border-radius: 10px;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .card-item:hover .card-bullet {
+      transform: scale(1.2);
+    }
+
+    /* SCROLL DOTS (minimal, functional) */
+    .scroll-dots {
+      position: fixed;
+      right: calc(30% + 20px);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 99;
+    }
+
+    .scroll-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .scroll-dot.active {
+      background: var(--green-bright);
+      width: 20px;
+      border-radius: 8px;
+    }
+
+    /* responsive adjustments */
+    @media (max-width: 1100px) {
+      .card-title {
+        font-size: 38px;
+      }
+      .left-card {
+        padding: 70px 40px 70px 48px;
+      }
+      .card-number {
+        left: 32px;
+        top: 24px;
+        font-size: 10px;
+      }
+      .section-description {
+        font-size: 15px;
+        max-width: 100%;
+      }
+      .card-btn {
+        width: 60%;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        flex-direction: column;
+      }
+      .left-scroll {
+        width: 100%;
+      }
+      .right-panel {
+        position: relative;
+        width: 100%;
+        top: 0;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 40px 32px;
+        margin-top: 0;
+      }
+      .scroll-dots {
+        display: none;
+      }
+      nav {
+        padding: 0 24px;
+      }
+      .nav-links {
+        gap: 20px;
+      }
+      .left-card {
+        padding: 64px 32px;
+      }
+      .card-title {
+        font-size: 34px;
+      }
+      .card-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 28px;
+      }
+      .card-list li {
+        font-size: 15px;
+      }
+      .card-btn {
+        width: 70%;
+      }
+    }
+
+    @media (max-width: 550px) {
+      .left-card {
+        padding: 56px 24px;
+      }
+      .card-title {
+        font-size: 28px;
+      }
+      .card-header {
+        gap: 14px;
+      }
+      .card-number {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-bottom: 18px;
+        display: inline-block;
+        width: fit-content;
+      }
+      .nav-auth button {
+        padding: 6px 14px;
+      }
+      .card-btn {
+        width: 100%;
+      }
+      .section-description {
+        padding-left: 14px;
+        font-size: 14px;
+      }
+    }
+
+    /* smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* custom scrollbar for right panel */
+    .right-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    .right-panel::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .right-panel::-webkit-scrollbar-thumb {
+      background: var(--green-bright);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION (unchanged design) -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">🌍</div>
+    <span class="nav-logo-text">Planet<span>Earth</span></span>
+  </a><!--
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Shopping</a></li>
+    <li><a href="#">Explore</a></li>
+  </ul>
+  <div class="nav-auth">
+    <button class="btn-login">Login</button>
+    <button class="btn-signup">Sign Up</button>
+  </div>
+  -->
+</nav>
+
+<!-- SCROLL DOTS (visual anchor) -->
+<div class="scroll-dots" id="scrollDots"></div>
+
+<div class="layout">
+  <!-- LEFT PANEL: NORMAL SECTIONS (no card backgrounds, but each includes a short para) -->
+  <div class="left-scroll" id="leftScroll">
+
+    <!-- Section 1: Shopping + short paragraph -->
+    <div class="left-card" data-index="0">
+      <span class="card-number">01 — Shopping</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🛒</div>
+          <div class="card-title">Earth Shopping</div>
+        </div>
+        <p class="section-description">Discover sustainable and global products curated from every continent — from local artisans to international brands.</p>
+        <ul class="card-list">
+          <li>Browse global products from every corner of the world</li>
+          <li>Exclusive deals & discounts updated daily</li>
+          <li>Secure, fast checkout with global payment support</li>
+          <li>Worldwide delivery tracking in real time</li>
+        </ul>
+        <button class="card-btn">Explore Shop →</button>
+      </div>
+    </div>
+
+    <!-- Section 2: Timer / Time + short paragraph -->
+    <div class="left-card" data-index="1">
+      <span class="card-number">02 — Time & Focus</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">⏱️</div>
+          <div class="card-title">Timer / Time</div>
+        </div>
+        <p class="section-description">Master your schedule with smart timers and world clocks — never miss a deadline across any timezone.</p>
+        <ul class="card-list">
+          <li>Smart countdown timers for any task or event</li>
+          <li>World clock across all major time zones</li>
+          <li>Deadline scheduler with reminders</li>
+          <li>Stopwatch & alert notifications</li>
+        </ul>
+        <button class="card-btn">Start Timer →</button>
+      </div>
+    </div>
+
+    <!-- Section 3: Finance / Investing + short paragraph -->
+    <div class="left-card" data-index="2">
+      <span class="card-number">03 — Finance</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">📈</div>
+          <div class="card-title">Investing</div>
+        </div>
+        <p class="section-description">Grow your wealth with real-time market data, AI insights, and portfolio tools designed for modern investors.</p>
+        <ul class="card-list">
+          <li>Live market data & real-time price feeds</li>
+          <li>Personal portfolio tracker with analytics</li>
+          <li>ROI analysis and performance tools</li>
+          <li>AI-powered smart investment insights</li>
+        </ul>
+        <button class="card-btn">View Markets →</button>
+      </div>
+    </div>
+
+    <!-- Section 4: Banking + short paragraph -->
+    <div class="left-card" data-index="3">
+      <span class="card-number">04 — Banking</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🏦</div>
+          <div class="card-title">Banking</div>
+        </div>
+        <p class="section-description">Seamless global banking with instant transfers, smart budgeting, and full account management at your fingertips.</p>
+        <ul class="card-list">
+          <li>Full account management dashboard</li>
+          <li>Instant transfers across borders</li>
+          <li>Savings plans & loan calculators</li>
+          <li>Detailed expense & budget tracking</li>
+        </ul>
+        <button class="card-btn">Open Account →</button>
+      </div>
+    </div>
+
+    <!-- Section 5: Audience / Viewers + short paragraph -->
+    <div class="left-card" data-index="4">
+      <span class="card-number">05 — Audience</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">👁️</div>
+          <div class="card-title">Viewers</div>
+        </div>
+        <p class="section-description">Understand your community with deep analytics, live metrics, and heatmaps to maximize engagement.</p>
+        <ul class="card-list">
+          <li>Deep audience analytics & demographics</li>
+          <li>Watch time metrics and retention stats</li>
+          <li>Live viewer count in real time</li>
+          <li>Engagement scoring & heatmaps</li>
+        </ul>
+        <button class="card-btn">View Stats →</button>
+      </div>
+    </div>
+
+    <!-- Section 6: Trending / Hits + short paragraph -->
+    <div class="left-card" data-index="5">
+      <span class="card-number">06 — Trending</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🔥</div>
+          <div class="card-title">Hits</div>
+        </div>
+        <p class="section-description">Stay ahead of the curve with real-time trends, viral moments, and hourly top charts from around the world.</p>
+        <ul class="card-list">
+          <li>What's trending worldwide right now</li>
+          <li>Top charts updated every hour</li>
+          <li>Viral content discovery feed</li>
+          <li>Popularity scores & momentum tracker</li>
+        </ul>
+        <button class="card-btn">See Trending →</button>
+      </div>
+    </div>
+
+    <!-- Section 7: Global network / Globe + short paragraph -->
+    <div class="left-card" data-index="6">
+      <span class="card-number">07 — Global</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🌐</div>
+          <div class="card-title">Globe</div>
+        </div>
+        <p class="section-description">Connect with millions across 195 countries, collaborate across borders, and explore regional hubs designed for you.</p>
+        <ul class="card-list">
+          <li>Connect with a worldwide network of people</li>
+          <li>Regional hubs for local communities</li>
+          <li>Cross-border collaboration tools</li>
+          <li>Available in 195 countries & multiple languages</li>
+        </ul>
+        <button class="card-btn">Explore Globe →</button>
+      </div>
+    </div>
+
+    <!-- Section 8: Account + short paragraph -->
+    <div class="left-card" data-index="7">
+      <span class="card-number">08 — Account</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">👤</div>
+          <div class="card-title">Account</div>
+        </div>
+        <p class="section-description">Take full control of your digital identity with advanced privacy, security, and customisation features.</p>
+        <ul class="card-list">
+          <li>Full profile settings & customisation</li>
+          <li>Privacy controls & data management</li>
+          <li>Security options & two-factor auth</li>
+          <li>Subscription & connected apps management</li>
+        </ul>
+        <button class="card-btn">Edit Account →</button>
+      </div>
+    </div>
+
+    <!-- Section 9: Contact & Support + short paragraph -->
+    <div class="left-card" data-index="8">
+      <span class="card-number">09 — Contact</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">📧</div>
+          <div class="card-title">Contact</div>
+        </div>
+        <p class="section-description">Reach our global support team 24/7 — we're here to answer questions, listen to ideas, and help you succeed.</p>
+        <ul class="card-list">
+          <li>Reach our support team 24/7</li>
+          <li>Submit feedback or feature requests</li>
+          <li>Partner & business enquiries</li>
+          <li>Live chat for urgent help</li>
+        </ul>
+        <button class="card-btn">Get in Touch →</button>
+      </div>
+    </div>
+
+    <!-- Section 10: Coming Soon + short paragraph -->
+    <div class="left-card" data-index="9">
+      <span class="card-number">10 — Soon</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🚀</div>
+          <div class="card-title">Coming Soon</div>
+        </div>
+        <p class="section-description">Be the first to experience groundbreaking features, early access programs, and exclusive launches.</p>
+        <ul class="card-list">
+          <li>New features launching this quarter</li>
+          <li>Early access for existing members</li>
+          <li>Sign up to the waitlist today</li>
+          <li>Stay ahead — be the first to know</li>
+        </ul>
+        <button class="card-btn">Join Waitlist →</button>
+      </div>
+    </div>
+
+    <!-- Section 11: About PlanetEarth + short paragraph -->
+    <div class="left-card" data-index="10">
+      <span class="card-number">11 — About</span>
+      <div class="card-inner">
+        <div class="card-header">
+          <div class="card-icon">🌍</div>
+          <div class="card-title">About</div>
+        </div>
+        <p class="section-description">We are a global collective on a mission to connect one planet — trusted by millions, built for opportunity.</p>
+        <ul class="card-list">
+          <li>Our mission: connect one planet</li>
+          <li>Founded by a global team of innovators</li>
+          <li>Trusted by millions across 195 countries</li>
+          <li>Building the future of opportunity</li>
+        </ul>
+        <button class="card-btn">Learn More →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: quick access (unchanged) -->
+  <div class="right-panel">
+    <div class="right-panel-title">Quick Access</div>
+    <div class="card-item"><span class="card-bullet"></span>Leads</div>
+    <div class="card-item"><span class="card-bullet"></span>Trends</div>
+    <div class="card-item"><span class="card-bullet"></span>Unisex</div>
+    <div class="card-item"><span class="card-bullet"></span>News</div>
+    <div class="card-item"><span class="card-bullet"></span>Young Winners</div>
+    <div class="card-item"><span class="card-bullet"></span>Up Coming Fame</div>
+    <div class="card-item"><span class="card-bullet"></span>Inventions Plus</div>
+    <div class="card-item"><span class="card-bullet"></span>How To Invest</div>
+    <div class="card-item"><span class="card-bullet"></span>President</div>
+    <div class="card-item"><span class="card-bullet"></span>Politics?</div>
+    <div class="card-item"><span class="card-bullet"></span>How To? Anything!</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const sections = document.querySelectorAll('.left-card');
+    const dotsContainer = document.getElementById('scrollDots');
+    if (!dotsContainer) return;
+
+    // build navigation dots
+    sections.forEach((_, idx) => {
+      const dot = document.createElement('div');
+      dot.classList.add('scroll-dot');
+      if (idx === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => {
+        sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.scroll-dot');
+
+    // Intersection Observer: highlight active dot when section enters viewport
+    const observerOptions = {
+      threshold: 0.45,
+      rootMargin: "-70px 0px 0px 0px"   // offset for fixed navbar
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const indexAttr = entry.target.getAttribute('data-index');
+          if (indexAttr !== null) {
+            const idx = parseInt(indexAttr, 10);
+            dots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === idx);
+            });
+          }
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // fallback for manual scroll highlight
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollPosition = window.scrollY + 200;
+          let activeFound = false;
+          for (let i = 0; i < sections.length; i++) {
+            const section = sections[i];
+            const rect = section.getBoundingClientRect();
+            const absoluteTop = rect.top + window.scrollY;
+            const absoluteBottom = absoluteTop + rect.height;
+            if (scrollPosition >= absoluteTop && scrollPosition <= absoluteBottom) {
+              dots.forEach((dot, idx) => dot.classList.toggle('active', idx === i));
+              activeFound = true;
+              break;
+            }
+          }
+          if (!activeFound && sections.length) {
+            const lastRect = sections[sections.length-1].getBoundingClientRect();
+            if (lastRect.bottom <= window.innerHeight + 100) {
+              dots.forEach((dot, idx) => dot.classList.toggle('active', idx === sections.length-1));
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>profile · hover links + ring</title>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Font for clean look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f9f3e8 0%, #ffe6d5 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+
+    /* main wrapper — relative anchor for absolute children */
+    .profile-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      min-height: 580px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ----- PROFILE IMAGE (original style preserved + enhancements) ----- */
+    .profile-image {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid #ffffff;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+      background: #e2d9d0;
+      z-index: 10;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .profile-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ----- HOVER OVERLAY (appears on pic hover) ----- */
+    .hover-links {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(20, 20, 30, 0.65);
+      backdrop-filter: blur(3px);
+      border-radius: 50%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s;
+      padding: 12px;
+      z-index: 20;
+    }
+
+    .profile-image:hover .hover-links {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* each link button */
+    .link-btn {
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      border-radius: 40px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e1e2a;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      backdrop-filter: blur(2px);
+      transition: all 0.15s;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      letter-spacing: 0.3px;
+    }
+
+    .link-btn i {
+      font-size: 14px;
+      color: #c44536;
+    }
+
+    .link-btn:hover {
+      background: #ffffff;
+      transform: scale(1.05);
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+      color: #000;
+    }
+
+    /* specific button colors (optional) */
+    .link-btn.photos-btn i {
+      color: #2a6f97;
+    }
+    .link-btn.bio-btn i {
+      color: #2e6b5e;
+    }
+
+    /* ----- BIO FORM (small floating card) ----- */
+    .bio-form-card {
+      position: absolute;
+      top: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 18px 22px;
+      border-radius: 28px;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+      width: 260px;
+      z-index: 50;
+      display: none;
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .bio-form-card.show {
+      display: block;
+    }
+
+    .bio-form-card h4 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1f2a36;
+      font-weight: 600;   
+    }
+
+    .bio-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #e2d9d0;
+      border-radius: 50px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 14px;
+      background: white;
+    }
+
+    .bio-input:focus {
+      border-color: #c44536;
+    }
+
+    .save-bio-btn {
+      background: #1e2a36;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+
+    .save-bio-btn:hover {
+      background: #c44536;
+    }
+
+    /* close tiny button */
+    .close-bio {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #5e5e6e;
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+    }
+
+    /* ----- PHOTOS RING (circular wrap around profile pic) ----- */
+    .photos-ring-container {
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      pointer-events: none;  /* let clicks pass through container, but we enable on thumbnails */
+      z-index: 5;
+      display: none;
+    }
+
+    .photos-ring-container.visible {
+      display: block;
+    }
+
+    .ring-thumb {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+      border: 3px solid #ffffff;
+      overflow: hidden;
+      pointer-events: auto;   /* allow clicking on images if needed */
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      transform: translate(-50%, -50%);
+      background-size: cover;
+      background-position: center;
+    }
+
+    .ring-thumb:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+      z-index: 30;
+      border-color: #f5e6d9;
+    }
+
+    /* small label inside ring thumb (optional) */
+    .ring-thumb::after {
+      content: "";
+    }
+
+    /* hidden file input for profile pic change */
+    #profilePicUpload {
+      display: none;
+    }
+
+    /* dummy redirect — just for demo */
+    .me-link {
+      text-decoration: none;
+    }
+
+    /* micro interaction */
+    .fa-regular, .fas, .far {
+      pointer-events: none;
+    }
+
+    /* tiny responsive */
+    @media (max-width: 480px) {
+      .profile-wrapper {
+        min-height: 520px;
+      }
+      .photos-ring-container {
+        width: 340px;
+        height: 340px;
+      }
+      .ring-thumb {
+        width: 56px;
+        height: 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="profile-wrapper">
+  <!-- PROFILE IMAGE (core) -->
+  <div class="profile-image">
+    <!-- default profile image (placeholder) -->
+    <img id="profileImg" src="https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&w=300" alt="profile">
+
+    <!-- HOVER LINKS (shown only when hovering the picture) -->
+    <div class="hover-links">
+      <!-- 1. Me → redirect (dummy profile page) -->
+      <button class="link-btn me-link" id="meRedirectBtn" title="Go to profile">
+        <i class="fas fa-user-circle"></i> Me
+      </button>
+      
+      <!-- 2. Profile pic change -->
+      <button class="link-btn" id="changePicBtn" title="Change profile picture">
+        <i class="fas fa-camera"></i> Pic
+      </button>
+      
+      <!-- 3. Bio form -->
+      <button class="link-btn bio-btn" id="bioFormBtn" title="Edit bio">
+        <i class="fas fa-pencil-alt"></i> Bio
+      </button>
+      
+      <!-- 4. Photos (circular ring) -->
+      <button class="link-btn photos-btn" id="photosToggleBtn" title="Show photo ring">
+        <i class="fas fa-images"></i> Photos
+      </button>
+    </div>
+  </div>
+
+  <!-- Hidden file input for profile picture change -->
+  <input type="file" id="profilePicUpload" accept="image/*">
+
+  <!-- BIO FORM (small card, appears when bio is clicked) -->
+  <div class="bio-form-card" id="bioFormCard">
+    <h4><i class="fas fa-feather-alt" style="margin-right: 6px;"></i> your bio</h4>
+    <input type="text" class="bio-input" id="bioInputField" placeholder="e.g., photographer • dreamer" maxlength="60">
+    <button class="save-bio-btn" id="saveBioBtn"><i class="fas fa-check"></i> save bio</button>
+    <button class="close-bio" id="closeBioCard">close</button>
+    <div style="font-size: 11px; margin-top: 8px; opacity: 0.7;">(bio saved in console)</div>
+  </div>
+
+  <!-- PHOTOS RING — circular wrap around profile pic (populated by js) -->
+  <div class="photos-ring-container" id="photosRing"></div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ----- elements -----
+    const profileImg = document.getElementById('profileImg');
+    const profilePicUpload = document.getElementById('profilePicUpload');
+    const changePicBtn = document.getElementById('changePicBtn');
+    const meRedirectBtn = document.getElementById('meRedirectBtn');
+    const bioFormBtn = document.getElementById('bioFormBtn');
+    const bioFormCard = document.getElementById('bioFormCard');
+    const closeBioCard = document.getElementById('closeBioCard');
+    const saveBioBtn = document.getElementById('saveBioBtn');
+    const bioInputField = document.getElementById('bioInputField');
+    const photosToggleBtn = document.getElementById('photosToggleBtn');
+    const photosRing = document.getElementById('photosRing');
+
+    // ----- SAMPLE IMAGES for the circular ring (6-8 images) -----
+    const sampleImages = [
+      'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/937481/pexels-photo-937481.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/3220360/pexels-photo-3220360.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/1484803/pexels-photo-1484803.jpeg?auto=compress&cs=tinysrgb&w=200',
+      'https://images.pexels.com/photos/189349/pexels-photo-189349.jpeg?auto=compress&cs=tinysrgb&w=200'
+    ];
+
+    // ----- generate circular ring (images around profile pic) -----
+    function buildPhotoRing() {
+      photosRing.innerHTML = ''; // clear
+      const count = sampleImages.length;
+      const radius = 150;        // distance from center (px) — fits within 400px container
+      const centerX = 200;       // half of container width (400/2)
+      const centerY = 200;       // half of container height (400/2)
+
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * 2 * Math.PI; // full circle
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        const thumb = document.createElement('div');
+        thumb.className = 'ring-thumb';
+        thumb.style.left = x + 'px';
+        thumb.style.top = y + 'px';
+        thumb.style.backgroundImage = `url('${sampleImages[i]}')`;
+        thumb.setAttribute('data-index', i);
+        // optional: click on thumb shows a message (just for fun)
+        thumb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          alert(`✨ photo ${i+1} — just a preview`);
+        });
+        photosRing.appendChild(thumb);
+      }
+    }
+
+    // call once
+    buildPhotoRing();
+
+    // ----- 1. ME redirect (to profile page) -----
+    meRedirectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // In a real app: window.location.href = '/profile';
+      alert("👤 Redirect to profile page (demo).\n(Simulated: go to /profile)");
+    });
+
+    // ----- 2. PROFILE PIC CHANGE (select + upload button) -----
+    changePicBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profilePicUpload.click();  // open file dialog
+    });
+
+    profilePicUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          profileImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        // small feedback
+        // reset input so same file can be chosen again if needed
+        profilePicUpload.value = '';
+      }
+    });
+
+    // ----- 3. BIO FORM (small form, input + save) -----
+    function openBioForm() {
+      bioFormCard.classList.add('show');
+      bioInputField.focus();
+    }
+
+    function closeBioForm() {
+      bioFormCard.classList.remove('show');
+    }
+
+    bioFormBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // toggle: if already visible, close; else open
+      if (bioFormCard.classList.contains('show')) {
+        closeBioForm();
+      } else {
+        openBioForm();
+      }
+    });
+
+    closeBioCard.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeBioForm();
+    });
+
+    // Save bio (doesn't show on page, just logs/demo)
+    saveBioBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const bioText = bioInputField.value.trim();
+      if (bioText === '') {
+        alert('📝 Bio is empty — but you can save anyway.');
+      }
+      console.log(`💾 Bio saved: "${bioText}"`);
+      alert(`✅ Bio saved! (check console)\n"${bioText || '(empty)'}"`);
+      // optional: keep it open or close? we close after save
+      closeBioForm();
+    });
+
+    // Click outside bio card? Not necessary, but we can close on pressing Escape (bonus)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && bioFormCard.classList.contains('show')) {
+        closeBioForm();
+      }
+    });
+
+    // Stop propagation when clicking inside bio card so it doesn't close accidentally
+    bioFormCard.addEventListener('click', (e) => e.stopPropagation());
+
+    // ----- 4. PHOTOS: circular ring toggle (dropdown style) -----
+    photosToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // toggle visibility of the ring container
+      photosRing.classList.toggle('visible');
+      
+      // little animation: if visible, you might want to re-center (already centered)
+      if (photosRing.classList.contains('visible')) {
+        // optional: close bio form if open (keep UI clean)
+        if (bioFormCard.classList.contains('show')) {
+          closeBioForm();
+        }
+      }
+    });
+
+    // Clicking outside the ring or on document? we can close ring when clicking elsewhere (optional)
+    // But we want the ring to stay until toggled again — keep it simple.
+    // However, if user clicks outside profile area, we might want to hide ring? 
+    // To follow common pattern: click on profile image or wrapper? we add a listener to document.
+    document.addEventListener('click', function(event) {
+      // If ring is visible and click is NOT on the photosToggleBtn and NOT inside photosRing
+      if (photosRing.classList.contains('visible')) {
+        const isPhotosBtn = photosToggleBtn.contains(event.target);
+        const isInsideRing = photosRing.contains(event.target);
+        // also if click on profile image overlay? we allow.
+        if (!isPhotosBtn && !isInsideRing) {
+          // but we must not close if click on hover links (they are inside .profile-image)
+          // check if click is inside .profile-image (except the photos button itself which we already excluded)
+          const profileImageDiv = document.querySelector('.profile-image');
+          if (profileImageDiv && !profileImageDiv.contains(event.target)) {
+            photosRing.classList.remove('visible');
+          } else {
+            // clicked inside profile image but not on photos button? we can keep ring open if it's a hover-link? 
+            // Actually better: if clicked on other links (Me, Pic, Bio) we may keep ring? 
+            // We'll let ring stay unless clicked outside wrapper. let's refine:
+            const wrapper = document.querySelector('.profile-wrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+              photosRing.classList.remove('visible');
+            }
+          }
+        }
+      }
+    });
+
+    // Also close bio form when clicking outside, but keep separate.
+    document.addEventListener('click', function(e) {
+      if (bioFormCard.classList.contains('show')) {
+        const isBioBtn = bioFormBtn.contains(e.target);
+        const isInsideBio = bioFormCard.contains(e.target);
+        if (!isBioBtn && !isInsideBio) {
+          closeBioForm();
+        }
+      }
+    });
+
+    // prevent closing when interacting with ring thumbs (already handled)
+    
+    // tiny extra: adjust ring radius if container resizes? not needed.
+    // Also ensure hover links remain functional.
+
+    // prefill bio input with placeholder (optional)
+    // everything ready
+
+    // If the user wants to see demo of "Me" as real link: we keep as alert.
+
+    // For the "profile pic" we used upload; that's the select+upload.
+
+    // The bio content is not shown on the main view, only form.
+
+    // Ring images are wrapped circularly.
+
+    console.log('✨ Profile interactive ready — hover on pic to see links.');
+  })();
+</script>
+<!-- additional note: the reference image for "photos" shows a ring of circles around profile pic. 
+     The ring appears when "Photos" is clicked. Each image is clickable (preview alert). -->
+</body>
+</html>

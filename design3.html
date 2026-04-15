@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlanetEarth – Film Ring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --bg:#03091a; --gold:#d4952a; --gold-light:#f0c060; --white:#ffffff; }
+    body {
+      font-family:'DM Sans',sans-serif;
+      background:var(--bg); color:var(--white);
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; overflow:hidden;
+    }
+    canvas.stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background:radial-gradient(ellipse 80% 60% at 50% 52%, rgba(212,149,42,0.04) 0%, transparent 70%);
+      pointer-events:none; z-index:0;
+    }
+    .globe-section {
+      position:relative; z-index:1;
+      display:flex; flex-direction:column;
+      align-items:center; gap:22px; padding:40px 24px; width:100%;
+    }
+    .globe-heading { text-align:center; }
+    .globe-heading h2 {
+      font-family:'Syne',sans-serif;
+      font-size:clamp(22px,4vw,44px); font-weight:800;
+      letter-spacing:-0.5px; line-height:1.15;
+    }
+    .globe-heading h2 em { font-style:normal; color:var(--gold-light); }
+    .globe-heading p { margin-top:8px; font-size:13px; font-weight:300; color:rgba(255,255,255,0.36); }
+    .globe-stage {
+      position:relative; width:480px; height:480px;
+    }
+    .globe-stage::after {
+      content:''; position:absolute; bottom:-10px; left:50%;
+      transform:translateX(-50%);
+      width:260px; height:26px;
+      background:radial-gradient(ellipse, rgba(212,149,42,0.35) 0%, transparent 70%);
+      border-radius:50%; filter:blur(10px); pointer-events:none;
+    }
+    #globeCanvas { display:block; }
+    .frame-label {
+      font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+      letter-spacing:2.5px; text-transform:uppercase;
+      color:rgba(255,255,255,0.42); min-height:20px;
+    }
+    .controls { display:flex; align-items:center; gap:36px; }
+    .arrow-btn {
+      width:58px; height:58px; border-radius:50%;
+      border:1.5px solid rgba(212,149,42,0.35);
+      background:rgba(212,149,42,0.08); backdrop-filter:blur(12px);
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      color:var(--gold-light);
+      transition:background .2s, border-color .2s, transform .15s, box-shadow .2s;
+    }
+    .arrow-btn:hover {
+      background:rgba(212,149,42,0.22); border-color:var(--gold-light);
+      box-shadow:0 0 22px rgba(212,149,42,0.28); transform:scale(1.08);
+    }
+    .arrow-btn:active { transform:scale(0.95); }
+    .arrow-btn svg {
+      width:22px; height:22px; stroke:currentColor; fill:none;
+      stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+    }
+    .counter { text-align:center; min-width:58px; }
+    .counter strong {
+      display:block; font-family:'Syne',sans-serif;
+      font-size:28px; font-weight:800; color:var(--gold-light); line-height:1;
+    }
+    .counter span { font-size:12px; color:rgba(255,255,255,0.32); }
+    @media (max-width:520px) { .globe-stage { width:340px; height:340px; } }
+  </style>
+</head>
+<body>
+
+<canvas class="stars" id="starsCanvas"></canvas>
+
+<section class="globe-section">
+  <div class="globe-heading">
+    <h2>Stories Around<br/>the <em>Globe</em></h2>
+    <p>Click arrows to slide photo frames along the ring</p>
+  </div>
+
+  <div class="globe-stage">
+    <canvas id="globeCanvas" width="480" height="480"></canvas>
+  </div>
+
+  <div class="frame-label" id="frameLabel">Ocean</div>
+
+  <div class="controls">
+    <button class="arrow-btn" id="btnLeft" aria-label="Previous">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="counter">
+      <strong id="cNum">1</strong>
+      <span id="cTotal">/ 12</span>
+    </div>
+    <button class="arrow-btn" id="btnRight" aria-label="Next">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ── Stars ── */
+(function(){
+  const sc=document.getElementById('starsCanvas');
+  sc.width=window.innerWidth; sc.height=window.innerHeight;
+  const ctx=sc.getContext('2d');
+  for(let i=0;i<280;i++){
+    ctx.beginPath();
+    ctx.arc(Math.random()*sc.width,Math.random()*sc.height,Math.random()*1.1,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${Math.random()*.55+.1})`;
+    ctx.fill();
+  }
+})();
+
+/* ── Image data ── */
+const IMAGES=[
+  
+  {src:'images/2150804317.jpg',                           label:'Landscape'},
+  {src:'images/52fede5b44dfee94f976b8fa8b840426.jpg',     label:'Explorer'},
+  {src:'images/70872216903dc3d9f4e8eebafd41afb1.jpg',     label:'Journey'},
+  {src:'images/Image-2.png',                              label:'Horizon'},
+  {src:'images/Image-3.png',                              label:'Discovery'},
+  {src:'images/delicious-ice-cream-with-berries (1).jpg', label:'Delights'},
+  {src:'images/delicious-ice-cream-with-topping (1).jpg', label:'Treats'},
+  {src:'images/delicious-ice-cream-with-topping.jpg',     label:'Flavours'},
+  {src:'images/war-tank-dark-style.jpg',                  label:'Power'},
+];
+const FC=IMAGES.length;
+
+/* Build a texture from a loaded <img> — cover-fills the frame canvas */
+function makeImgTex(img){
+  const W=320, H=220;
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const ctx=c.getContext('2d');
+  // cover-fit: scale so the image fills W×H, cropping as needed
+  const scale=Math.max(W/img.naturalWidth, H/img.naturalHeight);
+  const dw=img.naturalWidth*scale, dh=img.naturalHeight*scale;
+  ctx.drawImage(img, (W-dw)/2, (H-dh)/2, dw, dh);
+  return new THREE.CanvasTexture(c);
+}
+
+/* Fallback placeholder (grey with label) */
+function makeFallbackTex(label){
+  const W=320, H=220;
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#1a2a3a'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.font='bold 18px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(label, W/2, H/2+6);
+  return new THREE.CanvasTexture(c);
+}
+
+/* Preload all images, then call cb(loadedImgArray) */
+function preloadImages(cb){
+  const imgs=new Array(FC).fill(null);
+  let pending=FC;
+  IMAGES.forEach((item,i)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload =()=>{ imgs[i]=img; if(--pending===0) cb(imgs); };
+    img.onerror=()=>{ imgs[i]=null; if(--pending===0) cb(imgs); };
+    img.src=item.src;
+  });
+}
+
+function makeEarthTex(){
+  const S=1024;
+  const c=document.createElement('canvas'); c.width=c.height=S;
+  const ctx=c.getContext('2d');
+  const og=ctx.createLinearGradient(0,0,0,S);
+  og.addColorStop(0,'#082550'); og.addColorStop(.35,'#0e5898');
+  og.addColorStop(.65,'#1468a8'); og.addColorStop(1,'#082550');
+  ctx.fillStyle=og; ctx.fillRect(0,0,S,S);
+  const conts=[
+    {x:.21,y:.36,rx:.085,ry:.18},{x:.26,y:.60,rx:.065,ry:.13},
+    {x:.52,y:.28,rx:.055,ry:.09},{x:.52,y:.47,rx:.065,ry:.14},
+    {x:.65,y:.26,rx:.12,ry:.11},{x:.72,y:.40,rx:.07,ry:.07},
+    {x:.78,y:.60,rx:.055,ry:.055},
+  ];
+  conts.forEach(({x,y,rx,ry})=>{
+    ctx.beginPath(); ctx.ellipse(x*S,y*S,rx*S,ry*S,0,0,Math.PI*2);
+    ctx.fillStyle='#3a7030'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x*S+rx*S*.2,y*S+ry*S*.1,rx*S*.45,ry*S*.42,.2,0,Math.PI*2);
+    ctx.fillStyle='#a06818'; ctx.fill();
+  });
+  ctx.fillStyle='#cce8ff';
+  ctx.beginPath(); ctx.ellipse(S/2,0,S*.38,S*.07,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(S/2,S,S*.32,S*.06,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=.22; ctx.fillStyle='#fff';
+  [[.14,.26,.13,.028],[.44,.40,.09,.025],[.70,.22,.08,.022],[.34,.56,.10,.026]]
+  .forEach(([x,y,rx,ry])=>{
+    ctx.beginPath(); ctx.ellipse(x*S,y*S,rx*S,ry*S,0,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  return new THREE.CanvasTexture(c);
+}
+
+/* ── Three.js ── */
+const canvas=document.getElementById('globeCanvas');
+const CW=canvas.width,CH=canvas.height;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setSize(CW,CH); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,CW/CH,.1,100);
+camera.position.set(0, 0.55, 4.0);
+camera.lookAt(0, -0.1, 0);
+
+scene.add(new THREE.AmbientLight(0xffffff,.42));
+const sun=new THREE.DirectionalLight(0xfff4e0,1.5); sun.position.set(4,3,5); scene.add(sun);
+const rim=new THREE.DirectionalLight(0x4070ff,.26); rim.position.set(-5,-2,-3); scene.add(rim);
+
+/* Earth — fully static, texture from 3dlogo.png */
+const earthMat = new THREE.MeshStandardMaterial({roughness:.55});
+const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1,64,64), earthMat);
+scene.add(earthMesh);
+new THREE.TextureLoader().load(
+  '3dlogo.png',
+  tex => { earthMat.map = tex; earthMat.needsUpdate = true; },
+  undefined,
+  () => { earthMat.map = makeEarthTex(); earthMat.needsUpdate = true; } // fallback
+);
+
+/* Atmosphere */
+(function(){
+  const S=256, c=document.createElement('canvas');
+  c.width=c.height=S;
+  const ctx=c.getContext('2d');
+  const g=ctx.createRadialGradient(S/2,S/2,S*.43,S/2,S/2,S/2);
+  g.addColorStop(0,'rgba(100,180,255,0)');
+  g.addColorStop(.73,'rgba(100,180,255,0.07)');
+  g.addColorStop(1,'rgba(100,180,255,0.32)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,S,S);
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.04,64,64),
+    new THREE.MeshStandardMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false})
+  ));
+})();
+
+/* ────────────────────────────────────────────────
+   RING  — two-group trick:
+   outerGroup  → only holds the orbital tilt (rotation.x)  — NEVER changes
+   innerGroup  → sits inside outerGroup, spins on its Y axis → frames slide in-plane
+   This gives true clockwise / anticlockwise motion as seen by the viewer.
+──────────────────────────────────────────────── */
+const RING_R   = 1.45;
+const RING_TILT = -26 * Math.PI / 180;   // orbital inclination
+const FRAME_W  = 0.74, FRAME_H = 0.28, FRAME_D = 0.018;  // wider frames = less gap
+
+const outerGroup = new THREE.Group();
+outerGroup.rotation.x = RING_TILT;
+outerGroup.position.y = -0.22;           // ring sits lower on the globe
+scene.add(outerGroup);
+
+const innerGroup = new THREE.Group();     // this one rotates on Y for CW / CCW
+outerGroup.add(innerGroup);
+
+/* Gold torus lives in innerGroup so it spins with the frames */
+innerGroup.add(new THREE.Mesh(
+  new THREE.TorusGeometry(RING_R, .007, 16, 120),
+  new THREE.MeshStandardMaterial({
+    color:0xd4952a, roughness:.3, metalness:.8,
+    emissive:0x7a4a08, emissiveIntensity:.3
+  })
+));
+
+/* ── Build ring + UI after images load ── */
+preloadImages(function(imgs){
+
+/* Place all frames in innerGroup */
+for(let i=0;i<FC;i++){
+  const angle=(i/FC)*Math.PI*2;
+  const tex = imgs[i] ? makeImgTex(imgs[i]) : makeFallbackTex(IMAGES[i].label);
+  const mats=[
+    new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+    new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+    new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+    new THREE.MeshStandardMaterial({color:0xa06010,roughness:.3,metalness:.7}),
+    new THREE.MeshStandardMaterial({map:tex,roughness:.5}),
+    new THREE.MeshStandardMaterial({color:0x705010,roughness:.3,metalness:.7}),
+  ];
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(FRAME_W,FRAME_H,FRAME_D),mats);
+  mesh.position.set(Math.cos(angle)*RING_R, 0, Math.sin(angle)*RING_R);
+  mesh.rotation.y = -angle + Math.PI/2;
+  innerGroup.add(mesh);
+}
+
+/* ── Slide state ── */
+const STEP = (Math.PI*2) / FC;
+let currentY = 0, targetY = 0, activeIdx = 0;
+
+const cNum      = document.getElementById('cNum');
+const cTotal    = document.getElementById('cTotal');
+const frameLabel= document.getElementById('frameLabel');
+cTotal.textContent=`/ ${FC}`;
+
+function updateUI(){
+  cNum.textContent = activeIdx+1;
+  frameLabel.textContent = IMAGES[activeIdx].label;
+}
+
+function slide(dir){
+  activeIdx = ((activeIdx + dir) + FC) % FC;
+  targetY  -= dir * STEP;
+  updateUI();
+}
+
+document.getElementById('btnRight').addEventListener('click', ()=> slide(+1));
+document.getElementById('btnLeft') .addEventListener('click', ()=> slide(-1));
+window.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight') slide(+1);
+  if(e.key==='ArrowLeft')  slide(-1);
+});
+
+updateUI();
+
+/* ── Render loop ── */
+function animate(){
+  requestAnimationFrame(animate);
+  innerGroup.rotation.y += (targetY - innerGroup.rotation.y) * 0.10;
+  renderer.render(scene,camera);
+}
+animate();
+
+}); // end preloadImages
+</script>
+</body>
+</html>
